@@ -94,7 +94,7 @@ bool SDS021::Update()
 	byte buffer[kInputLength_];
 
 	// Check serial buffer for a message
-	while (SoftwareSerial_.available() >= 10)
+	while (SoftwareSerial_.available() >= kInputLength_)
 	{
 		// Clear the buffer
 		for (int i = 0; i < kInputLength_; i++)
@@ -164,7 +164,7 @@ void SDS021::WriteMessage(byte* buffer)
 	SoftwareSerial_.write(buffer, kOutputLength_);
 
 	// Waits for software serial to finish sending message
-	delay(16); // (19 bytes * 8 bits * 0.104 ms = 15.808 ms)
+	delay(20); // (19 bytes * 8 bits * 0.104 ms = 15.808 ms minimum)
 
 	delete[] buffer;
 }
