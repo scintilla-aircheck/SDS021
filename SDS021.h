@@ -77,7 +77,7 @@ private:
 	SoftwareSerial SoftwareSerial_;
 	
 	// Message properties
-	static const byte kBaudRate_ = 9600;
+	static const int kBaudRate_ = 9600;
 	static const byte kOutputLength_ = 19;
 	static const byte kInputLength_ = 10;
 
