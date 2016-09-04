@@ -131,6 +131,8 @@ bool SDS021::Update()
 
 			// Update device ID
 			ID_ = CrunchBytes(buffer[6], buffer[7]);
+
+			updated = true;
 		}
 	}
 
