@@ -31,6 +31,9 @@ void SDS021::ID(int id)
 	buffer[13] = id >> 8;
 	buffer[14] = id & 0xFF;
 	WriteMessage(buffer);
+
+	// Check for response
+	Update();
 }
 
 bool SDS021::PassiveMode()
@@ -43,6 +46,9 @@ void SDS021::PassiveMode(bool passive)
 	byte* buffer = MakeMessage(EAction::Mode, true, ID_);
 	buffer[4] = passive;
 	WriteMessage(buffer);
+	Update();
+
+	// Check for response
 }
 
 bool SDS021::Awake()
@@ -55,6 +61,9 @@ void SDS021::Awake(bool working)
 	byte* buffer = MakeMessage(EAction::State, true, ID_);
 	buffer[4] = working;
 	WriteMessage(buffer);
+
+	// Check for response
+	Update();
 }
 
 byte SDS021::Interval()
@@ -70,6 +79,9 @@ void SDS021::Interval(byte minutes)
 	byte* buffer = MakeMessage(EAction::Interval, true, ID_);
 	buffer[4] = minutes;
 	WriteMessage(buffer);
+
+	// Check for response
+	Update();
 }
 
 float SDS021::PM2_5()
@@ -86,6 +98,9 @@ void SDS021::Query()
 {
 	byte* buffer = MakeMessage(EAction::Query, false, ID_);
 	WriteMessage(buffer);
+
+	// Check for response
+	Update();
 }
 
 bool SDS021::Update()
@@ -100,8 +115,21 @@ bool SDS021::Update()
 		for (int i = 0; i < kInputLength_; i++)
 			buffer[i] = 0;
 
+		// Crawl through for a start byte
+		while (SoftwareSerial_.peek() != (byte)EMessage::Head)
+			SoftwareSerial_.read();
+
 		// Read the next message
-		SoftwareSerial_.readBytesUntil((byte)EMessage::Tail, buffer, kInputLength_);
+		SoftwareSerial_.readBytes(buffer, kInputLength_);
+
+		// DEBUG:
+		Serial.print("SDS021 (in):");
+		for (int i = 0; i < kInputLength_; i++)
+		{
+			Serial.print(" 0x");
+			Serial.print(buffer[i], HEX);
+		}
+		Serial.println();
 
 		if (CheckSum(buffer))
 		{
@@ -161,6 +189,15 @@ void SDS021::WriteMessage(byte* buffer)
 	// Calculates and stores checksum in output buffer
 	buffer[17] = calcCheckSum(buffer, 2, 17);
 
+	// DEBUG:
+	Serial.print("SDS021 (out):");
+	for (int i = 0; i < kOutputLength_; i++)
+	{
+		Serial.print(" 0x");
+		Serial.print(buffer[i], HEX);
+	}
+	Serial.println();
+
 	SoftwareSerial_.write(buffer, kOutputLength_);
 
 	// Waits for software serial to finish sending message
@@ -178,9 +215,9 @@ byte SDS021::calcCheckSum(byte* buffer, int start_idx, int stop_idx)
 	return chk;
 }
 
-bool SDS021::CheckSum(byte* buffer)
+bool SDS021::CheckSum(byte* buffer, int start_idx, int stop_idx)
 {
-		return calcCheckSum(buffer, 2, 8) == buffer[8];
+		return calcCheckSum(buffer, start_idx, stop_idx) == buffer[stop_idx];
 }
 
 int SDS021::CrunchBytes(byte high_byte, byte low_byte)

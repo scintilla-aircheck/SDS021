@@ -100,7 +100,7 @@ private:
 	byte calcCheckSum(byte* buffer, int start_idx, int stop_idx);
 
 	/// Validates a messages checksum byte
-	bool CheckSum(byte* buffer);
+	bool CheckSum(byte* buffer, int start_idx = 2, int stop_idx = 8);
 
 	/// Combines a high and low byte into an integer
 	int CrunchBytes(byte high_byte, byte low_byte);
