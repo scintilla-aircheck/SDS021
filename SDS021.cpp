@@ -1,7 +1,7 @@
 #include "SDS021.h"
 
 
-SDS021::SDS021(byte rx_pin, byte tx_pin) : SoftwareSerial_(rx_pin, tx_pin)
+SDS021::SDS021()
 {
 	ID_ = 0xFFFF;
 	PM2_5_ = 0.0;
@@ -17,7 +17,7 @@ SDS021::~SDS021() {}
 
 void SDS021::Begin()
 {
-	SoftwareSerial_.begin(kBaudRate_);
+	Serial.begin(kBaudRate_);
 }
 
 int SDS021::ID()
@@ -109,27 +109,18 @@ bool SDS021::Update()
 	byte buffer[kInputLength_];
 
 	// Check serial buffer for a message
-	while (SoftwareSerial_.available() >= kInputLength_)
+	while (Serial.available() >= kInputLength_)
 	{
 		// Clear the buffer
 		for (int i = 0; i < kInputLength_; i++)
 			buffer[i] = 0;
 
 		// Crawl through for a start byte
-		while (SoftwareSerial_.peek() != (byte)EMessage::Head)
-			SoftwareSerial_.read();
+		while (Serial.peek() != (byte)EMessage::Head)
+			Serial.read();
 
 		// Read the next message
-		SoftwareSerial_.readBytes(buffer, kInputLength_);
-
-		// DEBUG:
-		Serial.print("SDS021 (in):");
-		for (int i = 0; i < kInputLength_; i++)
-		{
-			Serial.print(" 0x");
-			Serial.print(buffer[i], HEX);
-		}
-		Serial.println();
+		Serial.readBytes(buffer, kInputLength_);
 
 		if (CheckSum(buffer))
 		{
@@ -189,16 +180,7 @@ void SDS021::WriteMessage(byte* buffer)
 	// Calculates and stores checksum in output buffer
 	buffer[17] = calcCheckSum(buffer, 2, 17);
 
-	// DEBUG:
-	Serial.print("SDS021 (out):");
-	for (int i = 0; i < kOutputLength_; i++)
-	{
-		Serial.print(" 0x");
-		Serial.print(buffer[i], HEX);
-	}
-	Serial.println();
-
-	SoftwareSerial_.write(buffer, kOutputLength_);
+	Serial.write(buffer, kOutputLength_);
 
 	// Waits for software serial to finish sending message
 	delay(20); // (19 bytes * 8 bits * 0.104 ms = 15.808 ms minimum)

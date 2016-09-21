@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 
 
 class SDS021
@@ -38,7 +37,7 @@ public:
 	};
 
 	/// Instantiates a new SDS021 controller with an associated software serial connection
-	SDS021(byte rx_pin, byte tx_pin);
+	SDS021();
 	~SDS021();
 
 	/// Initializes the software serial connection
@@ -73,9 +72,6 @@ public:
 	bool Update();
 
 private:
-	// Software serial connection
-	SoftwareSerial SoftwareSerial_;
-	
 	// Message properties
 	static const int kBaudRate_ = 9600;
 	static const byte kOutputLength_ = 19;
