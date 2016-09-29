@@ -40,9 +40,6 @@ public:
 	SDS021();
 	~SDS021();
 
-	/// Initializes the software serial connection
-	void Begin();
-
 	/// Gets/sets the current sensor ID association
 	int ID();
 	void ID(int id = 0xFFFF);

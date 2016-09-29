@@ -15,11 +15,6 @@ SDS021::SDS021()
 
 SDS021::~SDS021() {}
 
-void SDS021::Begin()
-{
-	Serial.begin(kBaudRate_);
-}
-
 int SDS021::ID()
 {
 	return ID_;
