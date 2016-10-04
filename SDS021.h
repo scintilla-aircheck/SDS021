@@ -73,6 +73,8 @@ private:
 	static const int kBaudRate_ = 9600;
 	static const byte kOutputLength_ = 19;
 	static const byte kInputLength_ = 10;
+	static const int kOutputDelay_ = (1000 / kBaudRate_) * kOutputLength_ * 8;
+	static const int kInputDelay_ = (1000 / kBaudRate_) * kInputLength_ * 8;
 
 	// SDS021 data cache
 	int ID_;

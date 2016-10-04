@@ -15,108 +15,146 @@ SDS021::SDS021()
 
 SDS021::~SDS021() {}
 
+
 int SDS021::ID()
 {
 	return ID_;
 }
 
+
 void SDS021::ID(int id)
 {
+	// Compiles the message
 	byte* buffer = MakeMessage(EAction::Id, true, ID_);
 	buffer[13] = id >> 8;
 	buffer[14] = id & 0xFF;
 	WriteMessage(buffer);
 
-	// Check for response
+	// Waits for output buffer to clear and response to arrive
+	Serial.flush();
+	delay(kInputDelay_);
+
+	// Checks input cache for response
 	Update();
 }
+
 
 bool SDS021::PassiveMode()
 {
 	return Mode_;
 }
 
+
 void SDS021::PassiveMode(bool passive)
 {
+	// Compiles the message
 	byte* buffer = MakeMessage(EAction::Mode, true, ID_);
 	buffer[4] = passive;
 	WriteMessage(buffer);
-	Update();
 
-	// Check for response
+	// Waits for output buffer to clear and response to arrive
+	Serial.flush();
+	delay(kInputDelay_);
+
+	// Checks input cache for response
+	Update();
 }
+
 
 bool SDS021::Awake()
 {
 	return State_;
 }
 
+
 void SDS021::Awake(bool working)
 {
+	// Compiles the message
 	byte* buffer = MakeMessage(EAction::State, true, ID_);
 	buffer[4] = working;
 	WriteMessage(buffer);
 
-	// Check for response
+	// Waits for output buffer to clear and response to arrive
+	Serial.flush();
+	delay(kInputDelay_);
+
+	// Checks input cache for response
 	Update();
 }
+
 
 byte SDS021::Interval()
 {
 	return Interval_;
 }
 
+
 void SDS021::Interval(byte minutes)
 {
 	// Clamps minutes between 0-30
 	if (minutes > 30)
 		minutes = 30;
+
+	// Compiles the message
 	byte* buffer = MakeMessage(EAction::Interval, true, ID_);
 	buffer[4] = minutes;
 	WriteMessage(buffer);
 
-	// Check for response
+	// Waits for output buffer to clear and response to arrive
+	Serial.flush();
+	delay(kInputDelay_);
+
+	// Checks input cache for response
 	Update();
 }
+
 
 float SDS021::PM2_5()
 {
 	return PM2_5_;
 }
 
+
 float SDS021::PM10()
 {
 	return PM10_;
 }
+
 
 void SDS021::Query()
 {
 	byte* buffer = MakeMessage(EAction::Query, false, ID_);
 	WriteMessage(buffer);
 
-	// Check for response
+	// Waits for output buffer to clear and response to arrive
+	Serial.flush();
+	delay(kInputDelay_);
+
+	// Checks input cache for response
 	Update();
 }
+
 
 bool SDS021::Update()
 {
 	bool updated = false;
 	byte buffer[kInputLength_];
 
-	// Check serial buffer for a message
+	// Check Serial input buffer for a message
 	while (Serial.available() >= kInputLength_)
 	{
-		// Clear the buffer
+		// Clear the local buffer
 		for (int i = 0; i < kInputLength_; i++)
 			buffer[i] = 0;
 
-		// Crawl through for a start byte
+		// Crawl through Serial input buffer for a start byte
 		while (Serial.peek() != (byte)EMessage::Head)
 			Serial.read();
 
 		// Read the next message
 		Serial.readBytes(buffer, kInputLength_);
 
+		// Update local values if message is valid
 		if (CheckSum(buffer))
 		{
 			ECommandId command_id = (ECommandId)buffer[1];
@@ -144,7 +182,7 @@ bool SDS021::Update()
 			}
 
 			// Update device ID
-			ID_ = CrunchBytes(buffer[6], buffer[7]);
+			//ID_ = CrunchBytes(buffer[6], buffer[7]);
 
 			updated = true;
 		}
@@ -152,6 +190,7 @@ bool SDS021::Update()
 
 	return updated;
 }
+
 
 byte* SDS021::MakeMessage(EAction action, bool set, int address)
 {
@@ -170,6 +209,7 @@ byte* SDS021::MakeMessage(EAction action, bool set, int address)
 	return buffer;
 }
 
+
 void SDS021::WriteMessage(byte* buffer)
 {
 	// Calculates and stores checksum in output buffer
@@ -183,6 +223,7 @@ void SDS021::WriteMessage(byte* buffer)
 	delete[] buffer;
 }
 
+
 byte SDS021::calcCheckSum(byte* buffer, int start_idx, int stop_idx)
 {
 	int chk = 0;
@@ -192,10 +233,12 @@ byte SDS021::calcCheckSum(byte* buffer, int start_idx, int stop_idx)
 	return chk;
 }
 
+
 bool SDS021::CheckSum(byte* buffer, int start_idx, int stop_idx)
 {
-		return calcCheckSum(buffer, start_idx, stop_idx) == buffer[stop_idx];
+	return calcCheckSum(buffer, start_idx, stop_idx) == buffer[stop_idx];
 }
+
 
 int SDS021::CrunchBytes(byte high_byte, byte low_byte)
 {
